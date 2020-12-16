@@ -89,7 +89,7 @@ class Dispatch extends AdminController
             } catch (\Exception $e) {
                 $this->error('保存失败:'.$e->getMessage());
             }
-           
+
             if($save){
                 $this->model2 = new DispatchData();
                 $post = array(

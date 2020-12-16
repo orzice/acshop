@@ -99,11 +99,11 @@ class ApiController extends BaseController
 	     */
 	    protected function success($msg = '', $data = '', $url = null, $wait = 3, array $header = [])
 	    {
-	        if (is_null($url) && isset($_SERVER["HTTP_REFERER"])) {
-	            $url = $_SERVER["HTTP_REFERER"];
-	        } elseif ($url) {
-	            $url = (strpos($url, '://') || 0 === strpos($url, '/')) ? $url : app('route')->buildUrl($url)->__toString();
-	        }
+	        // if (is_null($url) && isset($_SERVER["HTTP_REFERER"])) {
+	        //     $url = $_SERVER["HTTP_REFERER"];
+	        // } elseif ($url) {
+	        //     $url = (strpos($url, '://') || 0 === strpos($url, '/')) ? $url : app('route')->buildUrl($url)->__toString();
+	        // }
 	
 	        $result = [
 	            'code' => 1,
@@ -135,11 +135,11 @@ class ApiController extends BaseController
 	     */
 	    protected function error($msg = '', $data = '', $url = null, $wait = 3, array $header = [])
 	    {
-	        if (is_null($url)) {
-	            $url = request()->isAjax() ? '' : 'javascript:history.back(-1);';
-	        } elseif ($url) {
-	            $url = (strpos($url, '://') || 0 === strpos($url, '/')) ? $url : app('route')->buildUrl($url)->__toString();
-	        }
+	        // if (is_null($url)) {
+	        //     $url = request()->isAjax() ? '' : 'javascript:history.back(-1);';
+	        // } elseif ($url) {
+	        //     $url = (strpos($url, '://') || 0 === strpos($url, '/')) ? $url : app('route')->buildUrl($url)->__toString();
+	        // }
 	
 	        $type   = $this->getResponseType();
 	        $result = [
