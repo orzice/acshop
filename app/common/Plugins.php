@@ -265,6 +265,16 @@ class Plugins
     	return $plugins;
     }
     /**
+     * 获取已安装的插件列表信息
+     */
+    static public function GetPluginState($dir = "",$state = 1)
+    {
+        if ($dir == '') {
+            return '';
+        }
+        return PluginsData::where('state',$state)->where("dir",$dir)->find();
+    }
+    /**
      * 获取未安装的插件信息 安装后 package.json包 更名
      */
     static public function GetInstallPlugin()

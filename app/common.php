@@ -249,23 +249,97 @@ if (!function_exists('array_format_key')) {
     }
 
 }
-/**
- * 插件请使用这个进行拦截系统操作  0是失败  1是成功！
- * 
- * 建议只在必要的时候再使用此函数，不然可能发生无法预料的问题。
- */
-if (!function_exists('api_return')) {
 
-    function api_return($code = 0,$msg = '', $data = '', $url = null, $wait = 2)
-    {
-        $result = [
-            'code' => $code,
-            'msg'  => $msg,
-            'data' => $data,
-            'url'  => $url,
-            'wait' => $wait,
-        ];
-        $response = json($result);
-        throw new HttpResponseException($response);
-    }
+//判断是否是APP访问
+function is_app(){
+  if(isset($_SERVER['HTTP_USER_AGENT'])){
+    $agent = $_SERVER['HTTP_USER_AGENT'];
+   }else{
+    $agent = '';
+   }
+   if(strpos($agent,"Html5Plus") !== false){
+    //H5手机版
+    return true;
+   }
 }
+//判断是否是手机访问不是就是PC访问
+function is_mobile(){
+  if(isMobiles()){
+      return true;
+  }else{
+      return false;
+  }
+}
+//判断是否是微信访问
+function is_weixin(){
+  $ua = $_SERVER['HTTP_USER_AGENT'];  
+  //MicroMessenger 是android/iphone版微信所带的
+  //Windows Phone 是winphone版微信带的  (这个标识会误伤winphone普通浏览器的访问)
+  //if(strpos($ua, 'MicroMessenger') == false || strpos($ua, 'Windows Phone') == false){ 
+  if(strpos($ua, 'MicroMessenger') == false){  
+      return false;
+  }else{  
+      return true;
+  }
+}
+//判断是否手机版
+function isMobiles()
+{ 
+    if (isset ($_SERVER['HTTP_X_WAP_PROFILE']))
+    {
+        return true;
+    } 
+    if (isset ($_SERVER['HTTP_USER_AGENT']))
+    {
+        $clientkeywords = array ('nokia',
+            'sony',
+            'ericsson',
+            'mot',
+            'samsung',
+            'htc',
+            'sgh',
+            'lg',
+            'sharp',
+            'sie-',
+            'philips',
+            'panasonic',
+            'alcatel',
+            'lenovo',
+            'iphone',
+            'ipod',
+            'blackberry',
+            'meizu',
+            'android',
+            'netfront',
+            'symbian',
+            'ucweb',
+            'windowsce',
+            'palm',
+            'operamini',
+            'operamobi',
+            'openwave',
+            'nexusone',
+            'cldc',
+            'midp',
+            'wap',
+            'mobile'
+            ); 
+        if (preg_match("/(" . implode('|', $clientkeywords) . ")/i", strtolower($_SERVER['HTTP_USER_AGENT'])))
+        {
+            return true;
+        } 
+    } 
+    
+    if (isset ($_SERVER['HTTP_VIA']))
+    { 
+        return stristr($_SERVER['HTTP_VIA'], "wap") ? true : false;
+    } 
+    if (isset ($_SERVER['HTTP_ACCEPT']))
+    { 
+        if ((strpos($_SERVER['HTTP_ACCEPT'], 'vnd.wap.wml') !== false) && (strpos($_SERVER['HTTP_ACCEPT'], 'text/html') === false || (strpos($_SERVER['HTTP_ACCEPT'], 'vnd.wap.wml') < strpos($_SERVER['HTTP_ACCEPT'], 'text/html'))))
+        {
+            return true;
+        } 
+    } 
+    return false;
+} 

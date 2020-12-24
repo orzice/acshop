@@ -433,6 +433,7 @@ define(["jquery"], function ($) {
                     '<a class="more-menu-item" href="https://oauth.acgice.com" target="_blank"><i class="layui-icon layui-icon-read" style="font-size: 19px;"></i> 开发文档</a>\n' +
                     '<a class="more-menu-item" href="https://gitee.com/orzice/acshop" target="_blank"><i class="layui-icon layui-icon-tabs" style="font-size: 16px;"></i> 开源地址</a>\n' +
                     '<a class="more-menu-item" href="https://oauth.acgice.com" target="_blank"><i class="layui-icon layui-icon-theme"></i> 官方网站</a>\n' +
+                    '<a class="more-menu-item" href="https://www.hasog.com" target="_blank"><i class="layui-icon layui-icon-read"></i> 幻神科技 提供技术支持</a>\n' +
                     '</div>' +
                     '</div>';
                 layer.open({

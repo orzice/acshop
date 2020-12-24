@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | AcShop (Acgice商城)
 // +----------------------------------------------------------------------
-// | 团队官网: https://oauth.acgice.com
+// | 技术支持【幻神科技】: https://www.hasog.com
 // +----------------------------------------------------------------------
 // | 联系我们: https://oauth.acgice.com/sdk/contact.html
 // +----------------------------------------------------------------------
@@ -12,22 +12,70 @@
 // +----------------------------------------------------------------------
 // | Author：Orzice(小涛)  https://gitee.com/orzice
 // +----------------------------------------------------------------------
-// | DateTime：2020-10-19 14:57:48
+// | DateTime：2020-12-24 16:35:20
 // +----------------------------------------------------------------------
 
 namespace app\home\controller;
 
 use app\HomeController;
+use Hasog\Response;
 
 
 class Index extends HomeController
 {
     protected $view;
+    protected $source;
 
+    // 分为 PC APP WAP WX 界面配置，权重 APP > WX > WAP > PC，APP和WX都有先决条件。
+    // 注：微信不存在但是WAP存在！那么默认WAP！如果都不存在 那么 只能返回PC了
+    // 注：如果在APP内且没有APP界面，那么直接返回404了！
+    // 2020-12-24 Orzice 平安夜~~
+    public function GetSource()
+    {
+      $dic  = public_path().'config\\';
+      //===========判断来源=============
+      //APP内
+      if (is_app()) {
+        $file = $dic .'app.json';
+        if (file_exists($file)) {
+          $this->source = 'app';
+          return $file;
+        }
+        return false;
+      }
+
+      //微信内
+      if (is_weixin()) {
+        $file = $dic .'wx.json';
+        if (file_exists($file)) {
+          $this->source = 'wx';
+          return $file;
+        }
+      }
+
+      //手机内
+      if (is_mobile()) {
+        $file = $dic .'wap.json';
+        if (file_exists($file)) {
+          $this->source = 'wap';
+          return $file;
+        }
+      }
+
+      $file = $dic .'pc.json';
+      if (file_exists($file)) {
+        $this->source = 'pc';
+        return $file;
+      }
+
+      return false;
+    }
     public function GetView()
     {
-      $dic  = public_path();
-      $file = $dic .'view.json';
+      $file = $this->GetSource();
+      if(!$file){
+        return abort(404, '文件不存在');
+      }
       if(!file_exists($file)){
         return false;
       }
@@ -58,16 +106,19 @@ class Index extends HomeController
     }
     public function SetDownload($dir)
     {
-      return download($dir, 'file')->force(false);
+      $new = new Response();
+      $Type = $new->Get();
+      return download($dir, 'file')->force(false)->expire(2592000)->mimeType($Type);//缓存30天 2592000秒 因为每个请求都十分的消耗性能！但是十分安全！
     }
     public function index()
     {
       if (!$this->GetView()) {
-        $this->error('失败');
+        return abort(404, '文件不存在');
       }
       $pathinfo = $this->request->pathinfo();
       $ext = $this->request->ext();
-      $file = root_path().'plugin\\'.$this->view['namespace'].'\page\\';
+      // $file = root_path().'plugin\\'.$this->view['namespace'].'\page\\'.$this->source.'\\';
+      $file = root_path().'plugin\\'.$this->view['namespace'].'\page\\'.$this->view['dir'].'\\';
 
       if ($ext == '') {
         $pathinfo .= '\index.html';

@@ -41,6 +41,10 @@
             <a href="#" onClick="javascript :history.back(-1);" class="btn btn-grey">返回上一页</a>
             <a id="href" href="{$url}" class="btn btn-primary">立即跳转</a>
         </p>
+        <p style="font-size: 14px;margin: 20px 0;padding: 10px 0;font-weight: 400;">
+            开源项目 <a href="https://gitee.com/orzice/acshop" target="_blank" class="">AcShop</a> 驱动，
+            由 <a href="https://www.hasog.com" target="_blank" class="">河南幻神科技</a> 提供技术支持
+        </p>
     </div>
  	<script type="text/javascript">
         (function(){

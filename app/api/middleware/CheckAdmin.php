@@ -35,37 +35,22 @@ class CheckAdmin
     {
         //Sessions(null,array("id"=>1,"expire_time"=>1634546127));
 
-        $adminConfig = config('admin');
+        $MemberConfig = config('member');
  
-        $adminId = Sessions("id");
-        $expireTime = Sessions("expire_time");
-        $authService = new AuthService($adminId);
-        $currentNode = $authService->getCurrentNode();
+        $member_id = Sessions("member_id");
         $currentController = parse_name($request->controller());
 
-        // print_r($currentNode);
-        // print_r($currentController);
-        // exit;
-
-        // 验证登录
-        if (!in_array($currentController, $adminConfig['no_login_controller']) &&
-            !in_array($currentNode, $adminConfig['no_login_node'])) {
-            empty($adminId) && $this->error('请先登录账号', 'login','login');
-
-            // 判断是否登录过期
-            if ($expireTime !== true && time() > $expireTime) {
-                Sessions(null, null);
-                $this->error('登录已过期，请重新登录', 'login', 'login');
-            }
+        // 插件不需要验证登录
+        $name = 'plugin.';
+        $info = $request->pathinfo();
+        if (substr ($info, 0,strlen($name)) == $name) {
+            return $next($request);
         }
 
-        // // 验证权限
-        // if (!in_array($currentController, $adminConfig['no_auth_controller']) &&
-        //     !in_array($currentNode, $adminConfig['no_auth_node'])) {
-        //     $check = $authService->checkNode($currentNode);
-        //     !$check && $this->error('无权限访问','return','return');
-
-        // }
+        // 其他的验证登录
+        if (!in_array($currentController, $MemberConfig['no_login_controller'])) {
+            empty($member_id) && $this->error('请先登录账号', 'login','login');
+        }
 
         return $next($request);
     }

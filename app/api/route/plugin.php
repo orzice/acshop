@@ -28,7 +28,8 @@ use think\facade\Route;
 /**
  * plugin.a-index-index-index    或者 home/ 都可以
  */
-Route::rule('plugin.<p1>-<p2>-<p3>-<p4>','AcShop\plugin\<p1>\api\<p2>\<p3>@<p4>');
+//Route::rule('plugin.<p1>-<p2>-<p3>-<p4>','AcShop\plugin\<p1>\api\<p2>\<p3>@<p4>');
+Route::rule('plugin.<p1>-<p2>-<p3>-<p4>','Plugin/call');
 
 // Route::rule('plugin.<p1>-<p2>-<p3>-<p4>', function ($p1,$p2,$p3,$p4) {
 // 	print_r($p1);
