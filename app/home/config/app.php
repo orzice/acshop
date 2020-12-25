@@ -22,7 +22,7 @@ return [
    
     'http_exception_template' => [
         // 定义404错误的模板文件地址
-        200 => \think\facade\App::getAppPath() . 'tpl' . DIRECTORY_SEPARATOR .'404.html',
+        // 200 => \think\facade\App::getAppPath() . 'tpl' . DIRECTORY_SEPARATOR .'404.html',
         // 定义404错误的模板文件地址
         404 => \think\facade\App::getAppPath() . 'tpl' . DIRECTORY_SEPARATOR .'404.html',
         // 还可以定义其它的HTTP status

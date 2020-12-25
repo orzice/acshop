@@ -82,7 +82,7 @@ require(["jquery", "easy-admin", "vue","layer"], function ($, ea, Vue,layer) {
         el: '#app',
         data: {
             poster:[
-                {foreach $row.descriptions as $key=>$vo } 
+                {foreach $row.descriptions as $key=>$vo }
                     {key:'{$vo.title}',val:'{$vo.value}'},
                 {/foreach}
             ]

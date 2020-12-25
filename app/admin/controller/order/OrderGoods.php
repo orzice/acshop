@@ -27,19 +27,20 @@ use app\common\model\OrderAddress;
 
 use EasyAdmin\annotation\ControllerAnnotation;
 use EasyAdmin\annotation\NodeAnotation;
+use think\queue\command\Retry;
 
 
 class OrderGoods extends AdminController
 {
 
     protected $sort = [
-        'id'   => 'desc',
+        'id' => 'desc',
     ];
 
     public function __construct(App $app)
     {
         parent::__construct($app);
-        $this->model = new Order();
+        $this->model = new OrderGoodsModel();
     }
 
     /**
@@ -57,11 +58,11 @@ class OrderGoods extends AdminController
             $where1 = array();
             $where2 = array();
 
-            for ($i=0; $i < count($where); $i++) {
-                if(strpos($where[$i][0],'goods')!==false){
-                    $where[$i][0] = str_replace("goods.","",$where[$i][0]);
+            for ($i = 0; $i < count($where); $i++) {
+                if (strpos($where[$i][0], 'goods') !== false) {
+                    $where[$i][0] = str_replace("goods.", "", $where[$i][0]);
                     $where1[] = $where[$i];
-                }else{
+                } else {
                     $where2[] = $where[$i];
                 }
             }
@@ -72,51 +73,77 @@ class OrderGoods extends AdminController
 
             $count = $this->model;
             if ($w1) {
-                $count = $count->hasWhere('goods',$where1);
+                $count = $count->hasWhere('goods', $where1);
             }
-            $count = $count->with(['goods','address'])
+            $count = $count->with(['goods', 'address'])
                 ->where($where2)
                 ->count();
 
             $list = $this->model;
             if ($w1) {
-                $list = $list->hasWhere('goods',$where1);
+                $list = $list->hasWhere('goods', $where1);
             }
-            $list = $list->with(['goods','address'])
+            $list = $list->with(['goods', 'address'])
                 ->where($where2)
                 ->page($page, $limit)
                 ->order($this->sort)
                 ->select();
 
             $data = [
-                'code'  => 0,
-                'msg'   => '',
+                'code' => 0,
+                'msg' => '',
                 'count' => $count,
-                'data'  => $list,
+                'data' => $list,
             ];
             return json($data);
         }
         return $this->fetch();
     }
 
-    public function get_goods($order_id){
-        $order = OrderGoodsModel::whereNull('delete_time')->where('id', $order_id)->findOrEmpty();
-        empty($order_id) && $this->error('订单不存在');
-        $count = $this->model;
+    public function get_goods()
+    {
+//        if ($this->request->isAjax()) {
 
+        $order_id = $this->request->get('order_id');
+        $page = $this->request->get('page');
+        $limit = $this->request->get('limit');
+        $order = OrderGoodsModel::whereNull('delete_time')->where('id', $order_id)->findOrEmpty();
+        $msg = '';
+        $code = 0;
+        $count = 0;
+        $order_goods = [];
+        if (!empty($order)) {
+//            print_r($order);die();
+            $order_goods = $this->model->where('order_id', $order->id)
+                ->page($page, $limit)
+                ->order($this->sort)
+                ->select();
+            $count = count($order_goods);
+        } else {
+            $msg = '订单不存在';
+            $code = 1;
+        }
         $data = [
-            'code'  => 0,
-            'msg'   => '',
+            'code' => $code,
+            'msg' => $msg,
             'count' => $count,
-//            'data'  => $list,
+            'data' => $order_goods,
         ];
-        return json($data);
+//        return json($data);
+        $this->assign('code', $code);
+        $this->assign('msg', $msg);
+        $this->assign('count', $count);
+        $this->assign('order_goods', $order_goods);
+        return $this->fetch();
+//        }
+//        return $this->fetch();
     }
 
 
-    public function edit($id){
+    public function edit($id)
+    {
         $order = Order::where('id', $id)->findOrEmpty();
-        if($this->request->isPost()){
+        if ($this->request->isPost()) {
             $post = $this->request->post();
             $rule = [
                 'name|名称' => 'require',
@@ -134,8 +161,7 @@ class OrderGoods extends AdminController
             !$is_exists && $this->error('保存失败,名称已存在');
             try {
                 $save = $this->model->find($id)->allowField($this->model::ALLOW_FIELDS)->save($post);
-            }
-            catch (\Exception $e) {
+            } catch (\Exception $e) {
                 $this->error('保存失败' . $e);
             }
             if ($save) {
@@ -148,9 +174,15 @@ class OrderGoods extends AdminController
         $this->assign('status_array', Order::STATUS_ARRAY);
         $this->assign('plugin', []);
         $order->goods;
+
         $this->assign('row', $order);
 //        print_r($order);die();
         return $this->fetch();
+    }
+
+
+    public function batch_delivery(){
+
     }
 
 

@@ -18,6 +18,8 @@
 namespace app\admin\controller\order;
 
 
+use app\common\components\Excel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use think\App;
 use think\facade\Config;
 use app\common\model\Order;
@@ -27,6 +29,7 @@ use app\common\model\OrderAddress;
 
 use EasyAdmin\annotation\ControllerAnnotation;
 use EasyAdmin\annotation\NodeAnotation;
+use think\facade\Db;
 
 /**
  * Class Home
@@ -37,7 +40,7 @@ class Home extends AdminController
 {
 
     protected $sort = [
-        'id'   => 'desc',
+        'id' => 'desc',
     ];
 
     public function __construct(App $app)
@@ -56,16 +59,16 @@ class Home extends AdminController
                 return $this->selectList();
             }
             list($page, $limit, $where) = $this->buildTableParames();
-          
+
             $w1 = false;
             $where1 = array();
             $where2 = array();
 
-            for ($i=0; $i < count($where); $i++) { 
-                if(strpos($where[$i][0],'goods')!==false){
-                    $where[$i][0] = str_replace("goods.","",$where[$i][0]);
+            for ($i = 0; $i < count($where); $i++) {
+                if (strpos($where[$i][0], 'goods') !== false) {
+                    $where[$i][0] = str_replace("goods.", "", $where[$i][0]);
                     $where1[] = $where[$i];
-                }else{
+                } else {
                     $where2[] = $where[$i];
                 }
             }
@@ -76,60 +79,61 @@ class Home extends AdminController
 
             $count = $this->model;
             if ($w1) {
-                $count = $count->hasWhere('goods',$where1);
+                $count = $count->hasWhere('goods', $where1);
             }
-            $count = $count->with(['goods','address'])
+            $count = $count->with(['goods', 'address'])
                 ->where($where2)
                 ->count();
 
             $list = $this->model;
             if ($w1) {
-                $list = $list->hasWhere('goods',$where1);
+                $list = $list->hasWhere('goods', $where1);
             }
-            $list = $list->with(['goods','address'])
+            $list = $list->with(['goods', 'address'])
                 ->where($where2)
                 ->page($page, $limit)
                 ->order($this->sort)
                 ->select();
 
             $data = [
-                'code'  => 0,
-                'msg'   => '',
+                'code' => 0,
+                'msg' => '',
                 'count' => $count,
-                'data'  => $list,
+                'data' => $list,
             ];
             return json($data);
         }
         return $this->fetch();
     }
 
-    public function edit($id){
+    public function edit($id)
+    {
         $order = Order::where('id', $id)->findOrEmpty();
-        if($this->request->isPost()){
+        empty($order) && $this->error('订单不存在');
+        if ($this->request->isPost()) {
             $post = $this->request->post();
+            $status_str = implode(',', array_keys($this->model::STATUS_ARRAY));
             $rule = [
-                'name|名称' => 'require',
-                'app_id|app_id' => 'require',
-                'app_secret|app_secret' => 'require',
-                'merchant_id|商户号id' => 'require',
-                'merchant_secret|商户号支付秘钥' => 'require',
-                'cert_file|cert证书文件' => 'require',
-                'key_file|key秘钥文件' => 'require',
-                'open_status|标准微信支付' => 'require',
+//                'status|订单状态' => 'number|in:' . $status_str,
+                'change_price|订单改价金额' => 'float|between: 0,99999999',
+                'change_dispatch_price|运费改价金额' => 'float|between: 0,99999999',
+                'merchant_remark|商家备注' => 'max:255',
+                'express_code|快递公司码' => 'max:50',
+                'express_company_name|快递公司名称' => 'max:50',
+                'express_sn|快递单号' => 'max:50',
             ];
             // 上级分类是否存在 并且存入id
             $this->validate($post, $rule);
-            $is_exists = $this->model->whereExists(['name', '=', $post['name']]);
-            !$is_exists && $this->error('保存失败,名称已存在');
             try {
-                $save = $this->model->find($id)->allowField($this->model::ALLOW_FIELDS)->save($post);
-            }
-            catch (\Exception $e) {
+//                $save = $this->model->find($id)->allowField($this->model::ALLOW_FIELDS)->save($post);
+//                if(!empty($post['express_sn'])){
+//                    $status = 2;
+//                }
+                $save = $order->allowField($this->model::ALLOW_FIELDS)->save($post);
+            } catch (\Exception $e) {
                 $this->error('保存失败' . $e);
             }
             if ($save) {
-                Uploadfile($post['cert_file']);
-                Uploadfile($post['key_file']);
                 $this->success('保存成功');
             }
             $this->error('保存失败');
@@ -137,10 +141,66 @@ class Home extends AdminController
         $this->assign('status_array', Order::STATUS_ARRAY);
         $this->assign('plugin', []);
         $order->goods;
+        $order->status_zh = Order::STATUS_ARRAY[$order->status];
+//        $order->member = $order->member->field('mobile', 'head_img', 'id')->select();
+////        print_r($order->member);die();
         $this->assign('row', $order);
-//        print_r($order);die();
         return $this->fetch();
+    }
 
+
+    // 获取批量发货模版
+    public function batch_delivery()
+    {
+        $is_ajax = $this->request->isAjax();
+//        !$is_ajax && return json(['msg'=>'错误']);
+        $get = $this->request->get();
+        $ids = $get['ids'];
+        $ids = explode(',', $ids);
+//        $results = $this->model->whereIn('id', $ids)->field('order_sn')->select();
+        $results = $this->model->whereIn('id', $ids)
+            ->field('order_sn, express_company_name, express_code, express_sn')
+            ->select()->toArray();
+//        $head = ['订单号', '快递公司名', '快递公司码', $results];
+        $head = ['订单号', '快递单号', '快递公司名', '快递公司码'];
+//        $head = ['订单号-order_sn', '快递公司名-express_company_name', '快递公司码-express_code', '快递单号-express_sn'];
+//        $orders = [
+//            ['a'=>1,'b'=>2,'c'=>3,'d'=>4,'e'=>5,]
+//        ];
+        $keys = ['order_sn', 'express_sn', 'express_company_name', 'express_code'];
+        $exp = new \app\common\Excel();
+        $file_name = date('Y-m-d H：i：s', time());
+        $exp->export($file_name, $results, $head, $keys, 'xlsx');
+//        $exp->export('测试1', [], $head, $keys,'xlsx');
+    }
+
+    // 批量发货
+    public function batch_delivery_data()
+    {
+//        $file = $this->request->file();
+        $files = $this->request->file();
+        $file = $files['file'];
+//        var_dump($file->getOriginalExtension());die();
+        $exp = new \app\common\Excel();
+//        print_r($file->getPath().'\\'.$file->getFilename());die();
+        $content = $exp->import($file->getPath() . '\\' . $file->getFilename(), $file->getOriginalExtension());
+        unset($content[0]);
+        $msg = '成功';
+        Db::startTrans();
+        try {
+            foreach ($content as $item) {
+                $order = $this->model::where('order_sn', $item[0])->where('status', '=', 1)
+                    ->select()->first();
+                !empty($order) && $order->save(['status' => 2, 'express_sn' => $item[1],
+                    'express_company_name' => $item[2], 'express_code' => $item[3],
+                    ]);
+            }
+            Db::commit();
+        } catch (\Exception $e) {
+            Db::rollback();
+            $msg = '批量发货失败，请检查格式以及订单号是否正确,且订单已付款';
+        }
+        return json(['code' => 0, 'msg' => $msg, 'data' => []]);
     }
 
 

@@ -7,6 +7,17 @@
             </div>
         </div>
 
+        <div class="layui-form-item  layui-row layui-col-xs12">
+            <label class="layui-form-label required" >商品分类</label>
+            <div class="layui-input-block">
+                <select name="category_id" lay-search>
+                    {foreach $pidMenuList as $vo}
+                    <option value="{$vo.id}">{$vo.name|raw}</option>
+                    {/foreach}
+                </select>
+            </div>
+        </div>
+
         <div class="layui-form-item">
             <label class="layui-form-label required">商品类型</label>
             <div class="layui-input-block">
@@ -25,9 +36,9 @@
         <div class="layui-form-item">
             <label class="layui-form-label required">商品属性</label>
             <div class="layui-input-block">
-                <input type="checkbox" name="goods[is_new]" lay-skin="primary" title="新上">
-                <input type="checkbox" name="goods[is_hot]" lay-skin="primary" title="热卖" >
-                <input type="checkbox" name="goods[is_discount]" lay-skin="primary" title="促销" >
+                <input type="checkbox" name="goods[is_new]" value="1" lay-skin="primary" title="新上">
+                <input type="checkbox" name="goods[is_hot]" value="1" lay-skin="primary" title="热卖" >
+                <input type="checkbox" name="goods[is_discount]" value="1" lay-skin="primary" title="促销" >
                 <tip></tip>
             </div>
         </div>

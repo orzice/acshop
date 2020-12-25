@@ -40,15 +40,17 @@ class Plugin extends AdminController
         if(count($call) !== 4){
             return $this->error('插件不存在', '','');
         }
+        $call3 = explode('.', $call[3]);
+
         $data = Plugins::GetPluginState($call[0]);
-        // print_r($data);
+
         if (!$data) {
             return $this->error('插件不存在或未开启！', '','');
         }
         // AcShop\plugin\<p1>\admin\<p2>\<p3>@<p4>
         try {
             $dic = 'AcShop\plugin\\'.$call[0].'\admin\\'.$call[1].'\\'.$call[2];
-            $dic2 = $call[3];
+            $dic2 = $call3[0];
             $test = new $dic($this->app);
             $test->$dic2();
         }  catch (\Throwable $e) {

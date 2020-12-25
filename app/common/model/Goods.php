@@ -22,5 +22,36 @@ use app\common\model\TimeModel;
 
 class Goods extends TimeModel
 {
+    protected $deleteTime = 'delete_time';
+
+    public function setIsHotAttr($value){
+//        print_r(111111);
+
+//        exit();
+        if(!empty($value)){
+            return 1;
+        }
+        return 0;
+    }
+
+    public function setIsNewAttr($value){
+//        print_r(222222);
+//        exit();
+        if(!empty($value)){
+            return 1;
+        }
+        return 0;
+    }
+
+    public function setIsDiscountAttr($value){
+//        print_r(333333);
+//        exit();
+        if(!empty($value)){
+            return 1;
+        }
+        return 0;
+    }
+
+
 
 }

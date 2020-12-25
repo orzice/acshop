@@ -2,7 +2,7 @@
 namespace app\admin\controller\page;
 
 use app\common\controller\AdminController;
-use app\common\model\Carousel as Carousels;
+use app\common\model\PageCarousel as Carousels;
 use think\App;
 
 use EasyAdmin\annotation\ControllerAnnotation;

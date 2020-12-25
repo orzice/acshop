@@ -2,7 +2,7 @@
 namespace app\admin\controller\page;
 
 use app\common\controller\AdminController;
-use app\common\model\Notice as Notices;
+use app\common\model\PageNotice as Notices;
 use think\App;
 
 use EasyAdmin\annotation\ControllerAnnotation;

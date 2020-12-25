@@ -122,6 +122,7 @@ class Category extends AdminController
 //            $save ? $this->success('保存成功') : $this->error('保存失败') ;
         }
         $pidMenuList = $this->model->getPidMenuList();
+        $this->assign('category_plugin', []);
         $this->assign('id', $id);
         $this->assign('pidMenuList', $pidMenuList);
         return $this->fetch();
@@ -166,7 +167,7 @@ class Category extends AdminController
 //            $save ? $this->success('保存成功') : $this->error('保存失败') ;
         }
         $pidMenuList = $this->model->getPidMenuList();
-
+        $this->assign('category_plugin', []);
         $this->assign([
             'id' => $id,
             'pidMenuList' => $pidMenuList,

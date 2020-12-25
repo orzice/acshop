@@ -19,10 +19,20 @@ namespace app\common\model;
 
 
 use app\common\model\TimeModel;
+use think\model\relation\HasMany;
 
 class Member extends TimeModel
 {
 
     protected $deleteTime = 'delete_time';
+
+
+    public function orders(){
+        return $this->hasMany('app\common\model\Order', 'uid', 'id');
+    }
+
+    public function address(){
+        return $this->hasMany('app\common\model\MemberAddress', 'uid', 'id');
+    }
 
 }
