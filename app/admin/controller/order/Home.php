@@ -60,6 +60,20 @@ class Home extends AdminController
             }
             list($page, $limit, $where) = $this->buildTableParames();
 
+
+            $get = $this->request->get();
+            $action = isset($get['action']) && !empty($get['action']) ? $get['action'] : '{}';
+            $action_model = $this->model;
+            switch ($action) {
+                case 'paid':
+//                    $action_model = $this->model->whereNotNull('apply_time');
+                    $this->model = $this->model->where('status', '=',1);
+                    break;
+                case 'send_goods':
+//                    $action_model = $this->model->whereNotNull('content_time');
+                    $this->model = $this->model->where('status', '=', 2);
+                    break;
+            }
             $w1 = false;
             $where1 = array();
             $where2 = array();
@@ -101,8 +115,13 @@ class Home extends AdminController
                 'count' => $count,
                 'data' => $list,
             ];
+            $this->model = $action_model;
             return json($data);
         }
+
+        $get = $this->request->get();
+        $action = isset($get['action']) && !empty($get['action']) ? $get['action'] : '{}';
+        $this->assign('action', $action);
         return $this->fetch();
     }
 
@@ -122,14 +141,31 @@ class Home extends AdminController
                 'express_company_name|快递公司名称' => 'max:50',
                 'express_sn|快递单号' => 'max:50',
             ];
+            $price = 0;
+            if ($order->status!==0){
+                unset($post['change_price']);
+                unset($post['change_dispatch_price']);
+            }
+            if ($order->status!==1 && $order->status!==2){
+                unset($post['express_code']);
+                unset($post['express_company_name']);
+                unset($post['express_sn']);
+            }
+            $price += (isset($post['change_price']) && $post['change_price'] > 0)? $post['change_price'] : $order->goods_price;
+            $price += (isset($post['change_dispatch_price']) && $post['change_dispatch_price'] > 0)? $post['change_dispatch_price'] : $order->dispatch_price;
             // 上级分类是否存在 并且存入id
             $this->validate($post, $rule);
             try {
 //                $save = $this->model->find($id)->allowField($this->model::ALLOW_FIELDS)->save($post);
-//                if(!empty($post['express_sn'])){
-//                    $status = 2;
-//                }
+                if($price!=$order->price){
+                    $order->price = $price;
+                }
+                if(!empty($post['express_sn'])){
+                    $order->status = 2;
+                }
+                $order->save();
                 $save = $order->allowField($this->model::ALLOW_FIELDS)->save($post);
+
             } catch (\Exception $e) {
                 $this->error('保存失败' . $e);
             }
@@ -174,13 +210,84 @@ class Home extends AdminController
 //        $exp->export('测试1', [], $head, $keys,'xlsx');
     }
 
+
+    public function receive_money(){
+        $post = $this->request->post();
+        $order_id = isset($post['order_id'])? $post['order_id'] : '';
+        $order = Order::where('id', $order_id)->findOrEmpty();
+        (empty($order) || $order->status !== 0)  && $this->error('订单错误');
+        try{
+            $order->status = 1;
+            $save = $order->save();
+        }catch (\Exception $e){
+            $this->error('订单错误');
+        }
+        $save ? $this->success('收款成功', ['status'=>Order::STATUS_ARRAY[$order->status]]) : $this->error('订单错误') ;
+    }
+
+    public function send_goods(){
+        $post = $this->request->post();
+        $order_id = isset($post['order_id'])? $post['order_id'] : '';
+        $order = Order::where('id', $order_id)->findOrEmpty();
+        (empty($order) || $order->status !== 1)  && $this->error('订单错误');
+        try{
+            $order->status = 2;
+            $save = $order->save();
+        }catch (\Exception $e){
+            $this->error('订单错误');
+        }
+        $save ? $this->success('发货成功', ['status'=>Order::STATUS_ARRAY[$order->status]]) : $this->error('订单错误') ;
+    }
+
+    public function receive_goods(){
+        $post = $this->request->post();
+        $order_id = isset($post['order_id'])? $post['order_id'] : '';
+        $order = Order::where('id', $order_id)->findOrEmpty();
+        (empty($order) || $order->status !== 2)  && $this->error('订单错误');
+        try{
+            $order->status = 3;
+            $save = $order->save();
+        }catch (\Exception $e){
+            $this->error('订单错误');
+        }
+        $save ? $this->success('收货成功', ['status'=>Order::STATUS_ARRAY[$order->status]]) : $this->error('订单错误') ;
+    }
+
+    public function apply_cancel(){
+        $post = $this->request->post();
+        $order_id = isset($post['order_id'])? $post['order_id'] : '';
+        $order = Order::where('id', $order_id)->findOrEmpty();
+        (empty($order) || $order->status !== 1)  && $this->error('订单错误');
+        Db::startTrans();
+        try{
+            $data = [
+              'uid' => $order->uid,
+              'order_id' => $order->id,
+              'price' => $order->price,
+              'order_sn' => $order->order_sn,
+              'status' => 0,
+            ];
+            $save_refund = $order->order_refund()->save($data);
+            $order->status = -2;
+            $save = $order->save();
+        }catch (\Exception $e){
+            Db::rollback();
+            $this->error('订单错误');
+        }
+//        $save ? $this->success('申请成功', ['status'=>Order::STATUS_ARRAY[$order->status]]) : $this->error('订单错误') ;
+        if ($save_refund && $save){
+            Db::commit();
+            $this->success('申请成功', ['status'=>Order::STATUS_ARRAY[$order->status]]);
+        }
+        $this->error('订单错误');
+    }
+
     // 批量发货
     public function batch_delivery_data()
     {
 //        $file = $this->request->file();
         $files = $this->request->file();
         $file = $files['file'];
-//        var_dump($file->getOriginalExtension());die();
         $exp = new \app\common\Excel();
 //        print_r($file->getPath().'\\'.$file->getFilename());die();
         $content = $exp->import($file->getPath() . '\\' . $file->getFilename(), $file->getOriginalExtension());
@@ -198,7 +305,7 @@ class Home extends AdminController
             Db::commit();
         } catch (\Exception $e) {
             Db::rollback();
-            $msg = '批量发货失败，请检查格式以及订单号是否正确,且订单已付款';
+            $msg = '批量发货失败, 请检查格式以及订单号是否正确, 且订单已付款';
         }
         return json(['code' => 0, 'msg' => $msg, 'data' => []]);
     }

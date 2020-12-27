@@ -52,7 +52,7 @@ Github : https://github.com/orzice/acgice
     - [x] Auth授权
     - [x] 管理员注册/删除/封禁
     - [x] 菜单管理/节点管理
-    - [x] 网站配置
+    - [ ] 网站配置
     - [x] 文件上传
   - [x] 插件系统
     - [x] 插件安装/卸载/删除
@@ -89,6 +89,8 @@ Github : https://github.com/orzice/acgice
       - [x] 表格快捷批量发货
     - [ ] 用户退款
       - [ ] 审核退款
+    - [ ] 已支付列表
+    - [ ] 已发货列表
   - [ ] 财务管理
     - [x] 余额设置
     - [x] 提现设置

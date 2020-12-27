@@ -23,7 +23,7 @@ use app\common\model\TimeModel;
 class Order extends TimeModel
 {
 
-    const STATUS_ARRAY = [-1 => '已取消',0=>'待付款',1=>'已付款',2=>'已发货', 3=>'已完成'];
+    const STATUS_ARRAY = [-2=>'申请退款', -1 => '已取消',0=>'待付款',1=>'已付款',2=>'已发货', 3=>'已完成'];
     const MERCHANT_STATUS = [-1 => '已取消',1=>'已付款',2=>'已发货', 3=>'已完成'];
     const ORDER_ARRAY = [0=>'无需配送',1=>'快递',2=>'门店自提',3=>'门店配送'];
     const ALLOW_FIELDS = [
@@ -47,6 +47,10 @@ class Order extends TimeModel
     public function goods()
     {
         return $this->hasMany('app\common\model\OrderGoods', 'order_id', 'id');
+    }
+    public function order_refund()
+    {
+        return $this->hasMany('app\common\model\OrderRefund', 'order_id', 'id');
     }
 
     public function getISVirtualAttr($value)

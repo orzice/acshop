@@ -99,5 +99,56 @@ require(["jquery", "easy-admin", "vue"], function ($, ea, Vue) {
             }
         });
     })
+    $('#send_goods').click(function () {
+        // alert(1)
+        $.ajax({
+            url: './send_goods',
+            method: 'post',
+            dataType: 'json',
+            data: {'order_id': {$row.id}},
+            success: function(res) {
+                // 假如返回的 res.data 是需要导出的列表数据
+                console.log(res.data);// [{name: 'wang', age: 18}, {name: 'layui', age: 3}]
+                if (res.code == 1){
+                    // $('#status').html(res.data.status)
+                    window.location.reload()
+                }
+            }
+        });
+    })
+    $('#receive_goods').click(function () {
+        // alert(1)
+        $.ajax({
+            url: './receive_goods',
+            method: 'post',
+            dataType: 'json',
+            data: {'order_id': {$row.id}},
+            success: function(res) {
+                // 假如返回的 res.data 是需要导出的列表数据
+                console.log(res.data);// [{name: 'wang', age: 18}, {name: 'layui', age: 3}]
+                if (res.code == 1){
+                    // $('#status').html(res.data.status)
+                    window.location.reload()
+                }
+            }
+        });
+    })
+    $('#apply_cancel').click(function () {
+        // alert(1)
+        $.ajax({
+            url: './apply_cancel',
+            method: 'post',
+            dataType: 'json',
+            data: {'order_id': {$row.id}},
+            success: function(res) {
+                // 假如返回的 res.data 是需要导出的列表数据
+                console.log(res.data);// [{name: 'wang', age: 18}, {name: 'layui', age: 3}]
+                if (res.code == 1){
+                    // $('#status').html(res.data.status)
+                    window.location.reload()
+                }
+            }
+        });
+    })
 });
 </script>
